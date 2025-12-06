@@ -20,11 +20,36 @@ Vagrant.configure("2") do |config|
         v.customize ["modifyvm", :id, "--name", machine[:hostname]]
       end
 
+      # Provision managed nodes to allow password authentication initially
+      if machine[:hostname] != "controlnode"
+        node.vm.provision "shell", inline: <<-SHELL
+          # Enable password authentication for initial setup
+          sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config
+          systemctl restart sshd
+        SHELL
+      end
+
       if machine[:hostname] == "controlnode"
         node.vm.provision "shell", inline: <<-SHELL
           apt-get update
-          apt-get install -y ansible
+          apt-get install -y ansible sshpass
+          
+          # Create ansible directory
+          mkdir -p /etc/ansible
+          
+          # Generate SSH key for vagrant user (no passphrase)
+          sudo -u vagrant ssh-keygen -t rsa -b 2048 -f /home/vagrant/.ssh/id_rsa -N ""
+          
+          # Set proper permissions
+          chown -R vagrant:vagrant /home/vagrant/.ssh
+          chmod 700 /home/vagrant/.ssh
+          chmod 600 /home/vagrant/.ssh/id_rsa
+          chmod 644 /home/vagrant/.ssh/id_rsa.pub
         SHELL
+        
+        # Copy the hosts file to the controlnode
+        node.vm.provision "file", source: "./hosts", destination: "/tmp/hosts"
+        node.vm.provision "shell", inline: "mv /tmp/hosts /etc/ansible/hosts"
       end
     end
   end

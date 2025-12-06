@@ -1,0 +1,13 @@
+[database]
+db01 ansible_host=192.168.169.130 ansible_user=vagrant ansible_ssh_private_key_file=~/.ssh/id_rsa
+
+[webservers]
+web01 ansible_host=192.168.169.131 ansible_user=vagrant ansible_ssh_private_key_file=~/.ssh/id_rsa
+web02 ansible_host=192.168.169.132 ansible_user=vagrant ansible_ssh_private_key_file=~/.ssh/id_rsa
+
+[loadbalancers]
+loadbalancer ansible_host=192.168.169.134 ansible_user=vagrant ansible_ssh_private_key_file=~/.ssh/id_rsa
+
+[all:vars]
+ansible_python_interpreter=/usr/bin/python3
+ansible_ssh_common_args='-o StrictHostKeyChecking=no'
